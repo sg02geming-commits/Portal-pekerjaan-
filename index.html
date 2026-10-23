@@ -1,0 +1,583 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Portal Link Kerja</title>
+    <!-- Tambahan untuk PWA / Install ke HP -->
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#0f172a">
+    <link rel="apple-touch-icon" href="icon-192.png">
+
+    <style>
+        :root {
+            --bg-color: #0f172a;
+            --card-bg: #1e293b;
+            --text-main: #f8fafc;
+            --text-muted: #94a3b8;
+            --primary: #3b82f6;
+            --primary-hover: #2563eb;
+            --danger: #ef4444;
+            --danger-hover: #dc2626;
+            --border: #334155;
+            --radius: 14px;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Inter', system-ui, -apple-system, sans-serif;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            padding: 24px 16px;
+            display: flex;
+            justify-content: center;
+            min-height: 100vh;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 520px;
+        }
+
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 24px;
+        }
+
+        header h1 {
+            font-size: 20px;
+            font-weight: 700;
+            letter-spacing: -0.5px;
+        }
+
+        .header-actions {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+        }
+
+        .btn-add-main {
+            background-color: var(--primary);
+            color: white;
+            border: none;
+            padding: 10px 16px;
+            border-radius: 50px;
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            transition: background 0.2s, transform 0.1s;
+            box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+        }
+
+        .btn-add-main:hover {
+            background-color: var(--primary-hover);
+        }
+
+        /* Tombol Install PWA (Hidden default, muncul jika browser mendukung) */
+        #btnInstall {
+            background-color: #10b981;
+            color: white;
+            border: none;
+            padding: 10px 14px;
+            border-radius: 50px;
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            display: none; /* Muncul otomatis lewat script jika siap diinstal */
+            align-items: center;
+            gap: 6px;
+            box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
+        }
+
+        .search-box {
+            position: relative;
+            margin-bottom: 20px;
+        }
+
+        .search-box input {
+            width: 100%;
+            padding: 12px 16px 12px 42px;
+            background: var(--card-bg);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            font-size: 14px;
+            color: var(--text-main);
+            outline: none;
+            transition: border-color 0.2s;
+        }
+
+        .search-box input:focus {
+            border-color: var(--primary);
+        }
+
+        .search-box svg {
+            position: absolute;
+            left: 14px;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 18px;
+            height: 18px;
+            fill: var(--text-muted);
+        }
+
+        .link-list {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .link-card {
+            background: var(--card-bg);
+            padding: 16px;
+            border-radius: var(--radius);
+            border: 1px solid var(--border);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            transition: transform 0.2s, border-color 0.2s;
+        }
+
+        .link-card:hover {
+            border-color: #475569;
+            transform: translateY(-2px);
+        }
+
+        .link-info {
+            flex-grow: 1;
+            overflow: hidden;
+            margin-right: 12px;
+        }
+
+        .link-title {
+            font-weight: 600;
+            font-size: 15px;
+            color: var(--text-main);
+            margin-bottom: 4px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .link-url {
+            font-size: 12px;
+            color: var(--text-muted);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .link-actions {
+            display: flex;
+            gap: 8px;
+            flex-shrink: 0;
+        }
+
+        .btn-visit {
+            background-color: rgba(59, 130, 246, 0.15);
+            color: var(--primary);
+            text-decoration: none;
+            padding: 8px 14px;
+            border-radius: 10px;
+            font-size: 13px;
+            font-weight: 600;
+            transition: background 0.2s;
+        }
+
+        .btn-visit:hover {
+            background-color: var(--primary);
+            color: white;
+        }
+
+        .btn-delete {
+            background-color: rgba(239, 68, 68, 0.1);
+            color: var(--danger);
+            border: none;
+            width: 36px;
+            height: 36px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .btn-delete:hover {
+            background-color: var(--danger);
+            color: white;
+        }
+
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.6);
+            backdrop-filter: blur(4px);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 16px;
+            z-index: 100;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.25s ease;
+        }
+
+        .modal-overlay.active {
+            opacity: 1;
+            pointer-events: auto;
+        }
+
+        .modal-card {
+            background: var(--card-bg);
+            width: 100%;
+            max-width: 400px;
+            padding: 24px;
+            border-radius: 20px;
+            border: 1px solid var(--border);
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.3);
+            transform: translateY(20px);
+            transition: transform 0.25s ease;
+        }
+
+        .modal-overlay.active .modal-card {
+            transform: translateY(0);
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .modal-header h3 {
+            font-size: 17px;
+            font-weight: 600;
+        }
+
+        .btn-close-modal {
+            background: none;
+            border: none;
+            color: var(--text-muted);
+            font-size: 18px;
+            cursor: pointer;
+        }
+
+        .form-group {
+            margin-bottom: 14px;
+        }
+
+        .form-group label {
+            display: block;
+            font-size: 12px;
+            font-weight: 500;
+            color: var(--text-muted);
+            margin-bottom: 6px;
+        }
+
+        .form-group input {
+            width: 100%;
+            padding: 11px 14px;
+            background: var(--bg-color);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            font-size: 14px;
+            color: var(--text-main);
+            outline: none;
+        }
+
+        .form-group input:focus {
+            border-color: var(--primary);
+        }
+
+        .modal-actions {
+            display: flex;
+            gap: 10px;
+            margin-top: 20px;
+        }
+
+        .btn-cancel {
+            flex: 1;
+            background: transparent;
+            border: 1px solid var(--border);
+            color: var(--text-main);
+            padding: 11px;
+            border-radius: 10px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+        }
+
+        .btn-submit {
+            flex: 1;
+            background: var(--primary);
+            border: none;
+            color: white;
+            padding: 11px;
+            border-radius: 10px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+        }
+
+        .btn-danger-action {
+            flex: 1;
+            background: var(--danger);
+            border: none;
+            color: white;
+            padding: 11px;
+            border-radius: 10px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+        }
+
+        #toast {
+            position: fixed;
+            bottom: 24px;
+            left: 50%;
+            transform: translateX(-50%) translateY(100px);
+            background: #334155;
+            color: #fff;
+            padding: 10px 20px;
+            border-radius: 50px;
+            font-size: 13px;
+            font-weight: 500;
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.3);
+            transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            z-index: 200;
+            border: 1px solid #475569;
+        }
+
+        #toast.show {
+            transform: translateX(-50%) translateY(0);
+        }
+
+        .empty-state {
+            text-align: center;
+            color: var(--text-muted);
+            padding: 40px 20px;
+            font-size: 14px;
+            background: var(--card-bg);
+            border-radius: var(--radius);
+            border: 1px dashed var(--border);
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <!-- Header -->
+        <header>
+            <h1>Portal Kerja</h1>
+            <div class="header-actions">
+                <!-- Tombol Install PWA -->
+                <button id="btnInstall">
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+                    Install
+                </button>
+                <button class="btn-add-main" onclick="bukaModalTambah()">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+                    Tambah
+                </button>
+            </div>
+        </header>
+
+        <!-- Kotak Pencarian -->
+        <div class="search-box">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+            <input type="text" id="searchInput" placeholder="Cari link website..." onkeyup="cariLink()">
+        </div>
+
+        <!-- Daftar Container Link -->
+        <div class="link-list" id="linkList"></div>
+    </div>
+
+    <!-- Modal Tambah Link -->
+    <div class="modal-overlay" id="modalTambah">
+        <div class="modal-card">
+            <div class="modal-header">
+                <h3>Tambah Link Baru</h3>
+                <button class="btn-close-modal" onclick="tutupModal('modalTambah')">&times;</button>
+            </div>
+            <form id="formLink" onsubmit="tambahLink(event)">
+                <div class="form-group">
+                    <label>Nama Website / Pekerjaan</label>
+                    <input type="text" id="judulInput" placeholder="Contoh: Dashboard Admin" required autocomplete="off">
+                </div>
+                <div class="form-group">
+                    <label>URL Website</label>
+                    <input type="url" id="urlInput" placeholder="Contoh: https://example.com" required autocomplete="off">
+                </div>
+                <div class="modal-actions">
+                    <button type="button" class="btn-cancel" onclick="tutupModal('modalTambah')">Batal</button>
+                    <button type="submit" class="btn-submit">Simpan</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Modal Konfirmasi Hapus Kustom -->
+    <div class="modal-overlay" id="modalHapus">
+        <div class="modal-card" style="text-align: center;">
+            <h3 style="margin-bottom: 8px;">Hapus Link?</h3>
+            <p style="font-size: 13px; color: var(--text-muted); margin-bottom: 20px;">Link yang dihapus tidak bisa dikembalikan lagi.</p>
+            <div class="modal-actions">
+                <button type="button" class="btn-cancel" onclick="tutupModal('modalHapus')">Batal</button>
+                <button type="button" class="btn-danger-action" id="btnKonfirmasiHapus">Ya, Hapus</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast Notifikasi -->
+    <div id="toast">Berhasil menyimpan link!</div>
+
+    <script>
+        // Logika PWA Service Worker Registration
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('./sw.js')
+                    .then(() => console.log('Service Worker Berhasil Didaftarkan'))
+                    .catch((err) => console.log('Gagal Daftar Service Worker:', err));
+            });
+        }
+
+        // Logika Tombol Install Prompt
+        let deferredPrompt;
+        const btnInstall = document.getElementById('btnInstall');
+
+        window.addEventListener('beforeinstallprompt', (e) => {
+            e.preventDefault();
+            deferredPrompt = e;
+            btnInstall.style.display = 'flex'; // Munculkan tombol install
+        });
+
+        btnInstall.addEventListener('click', async () => {
+            if (deferredPrompt) {
+                deferredPrompt.prompt();
+                const { outcome } = await deferredPrompt.userChoice;
+                if (outcome === 'accepted') {
+                    console.log('Pengguna menginstal aplikasi');
+                }
+                deferredPrompt = null;
+                btnInstall.style.display = 'none';
+            }
+        });
+
+        let daftarLink = JSON.parse(localStorage.getItem('link_kerjaan')) || [
+            { judul: "Google Workspace / Gmail", url: "https://mail.google.com" },
+            { judul: "Google Drive Pekerjaan", url: "https://drive.google.com" }
+        ];
+
+        let indexAkanDihapus = null;
+
+        function simpanKeStorage() {
+            localStorage.setItem('link_kerjaan', JSON.stringify(daftarLink));
+        }
+
+        function tampilkanToast(pesan) {
+            const toast = document.getElementById('toast');
+            toast.textContent = pesan;
+            toast.classList.add('show');
+            setTimeout(() => {
+                toast.classList.remove('show');
+            }, 2500);
+        }
+
+        function bukaModalTambah() {
+            document.getElementById('modalTambah').classList.add('active');
+            document.getElementById('judulInput').value = '';
+            document.getElementById('urlInput').value = '';
+            setTimeout(() => document.getElementById('judulInput').focus(), 100);
+        }
+
+        function tutupModal(idModal) {
+            document.getElementById(idModal).classList.remove('active');
+        }
+
+        function renderLink(dataYangDitampilkan = daftarLink) {
+            const container = document.getElementById('linkList');
+            container.innerHTML = '';
+
+            if (dataYangDitampilkan.length === 0) {
+                container.innerHTML = `<div class="empty-state">Belum ada link tersimpan atau tidak ditemukan.</div>`;
+                return;
+            }
+
+            dataYangDitampilkan.forEach((item) => {
+                const indexAsli = daftarLink.indexOf(item);
+                
+                const card = document.createElement('div');
+                card.className = 'link-card';
+                card.innerHTML = `
+                    <div class="link-info">
+                        <div class="link-title">${item.judul}</div>
+                        <div class="link-url">${item.url}</div>
+                    </div>
+                    <div class="link-actions">
+                        <a href="${item.url}" target="_blank" class="btn-visit">Buka</a>
+                        <button class="btn-delete" onclick="konfirmasiHapus(${indexAsli})" title="Hapus">
+                            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
+                        </button>
+                    </div>
+                `;
+                container.appendChild(card);
+            });
+        }
+
+        function tambahLink(event) {
+            event.preventDefault();
+            const judul = document.getElementById('judulInput').value.trim();
+            const url = document.getElementById('urlInput').value.trim();
+
+            if (judul && url) {
+                daftarLink.unshift({ judul, url });
+                simpanKeStorage();
+                renderLink();
+                tutupModal('modalTambah');
+                tampilkanToast('Link baru berhasil ditambahkan!');
+            }
+        }
+
+        function konfirmasiHapus(index) {
+            indexAkanDihapus = index;
+            document.getElementById('modalHapus').classList.add('active');
+        }
+
+        document.getElementById('btnKonfirmasiHapus').onclick = function() {
+            if (indexAkanDihapus !== null) {
+                daftarLink.splice(indexAkanDihapus, 1);
+                simpanKeStorage();
+                renderLink();
+                tutupModal('modalHapus');
+                tampilkanToast('Link berhasil dihapus.');
+                indexAkanDihapus = null;
+            }
+        };
+
+        function cariLink() {
+            const keyword = document.getElementById('searchInput').value.toLowerCase();
+            const hasilFilter = daftarLink.filter(item => 
+                item.judul.toLowerCase().includes(keyword) || 
+                item.url.toLowerCase().includes(keyword)
+            );
+            renderLink(hasilFilter);
+        }
+
+        renderLink();
+    </script>
+</body>
+</html>
